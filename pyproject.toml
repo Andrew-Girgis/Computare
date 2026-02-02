@@ -1,0 +1,38 @@
+[project]
+name = "computare"
+version = "0.1.0"
+description = "Open-source personal finance platform — extract transactions from Canadian bank statements, categorize with AI, and detect subscriptions"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "pdfplumber>=0.10.0",
+    "pdf2image>=1.17.0",
+    "Pillow>=10.1.0",
+    "pytesseract>=0.3.10",
+    "anthropic>=0.40.0",
+    "pandas>=2.1.4",
+    "python-dotenv>=1.0.0",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-core>=0.3.0",
+    "openai>=1.50.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.0.0",
+    "supabase>=2.0.0",
+    "langtrace-python-sdk>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0"]
+
+[project.scripts]
+computare = "computare.main:main"
+computare-api = "uvicorn computare.api.app:app"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["computare*"]

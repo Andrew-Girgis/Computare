@@ -1,0 +1,49 @@
+# ============================================
+# Secrets & environment
+# ============================================
+.env
+.env.*
+.env.local
+!.env.example
+
+# ============================================
+# Personal financial data
+# ============================================
+finances/
+Scotiabank/
+Wealthsimple/
+American Express/
+data/
+output/
+*.pdf
+
+# ============================================
+# Python
+# ============================================
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ============================================
+# IDE & OS
+# ============================================
+.DS_Store
+*.log
+.claude/settings.local.json
+.claude/plans/
+.claude/projects/
+
+# ============================================
+# Supabase local
+# ============================================
+supabase/.branches/
+supabase/.temp/
+
+# ============================================
+# Personal Project Files
+# ============================================
+Computare - Project Overview.md
