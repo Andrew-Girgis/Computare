@@ -1,4 +1,5 @@
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
+import { ScrollTypewriterSequence } from "@/components/marketing/scroll-typewriter";
 import { ShineHeadline } from "@/components/marketing/shine-headline";
 import { ASCIIAnimation } from "@/components/marketing/ascii-animation";
 import { Counter } from "@/components/marketing/counter";
@@ -46,12 +47,12 @@ export default function Home() {
       <section className="min-h-screen flex flex-col items-center justify-center px-5 md:px-10 lg:px-20 c-hero relative overflow-hidden">
         {/* ASCII art animation — centered behind hero */}
         <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
+          className="absolute inset-0 flex items-center justify-start pointer-events-none select-none overflow-hidden"
           aria-hidden="true"
         >
           <ASCIIAnimation
-            className="text-ink/35 text-[10px] md:text-sm lg:text-base leading-[1.15] whitespace-pre"
-            fps={24}
+            className="text-ink/35 text-[10px] md:text-sm lg:text-base leading-[1.15] whitespace-pre -translate-x-1/8"
+            fps={12}
           />
         </div>
 
@@ -70,22 +71,16 @@ export default function Home() {
 
       {/* ── Philosophy ── */}
       <section className="py-24 md:py-32 lg:py-40 px-5 md:px-10 lg:px-20">
-        <div className="max-w-[800px] mx-auto space-y-20 md:space-y-28">
-          <ScrollReveal>
-            <p className="font-serif italic text-3xl md:text-[40px] leading-[1.25] tracking-[-0.02em]">
-              Open-source by default.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={80}>
-            <p className="font-serif italic text-3xl md:text-[40px] leading-[1.25] tracking-[-0.02em]">
-              Data ownership is non-negotiable.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={160}>
-            <p className="font-serif italic text-3xl md:text-[40px] leading-[1.25] tracking-[-0.02em]">
-              Built for the long term.
-            </p>
-          </ScrollReveal>
+        <div className="max-w-[800px] mx-auto">
+          <ScrollTypewriterSequence
+            lines={[
+              "Open-source by default.",
+              "Data ownership is non-negotiable.",
+              "Built for the long term.",
+            ]}
+            className="space-y-20 md:space-y-28"
+            lineClassName="font-serif italic text-3xl md:text-[40px] leading-[1.25] tracking-[-0.02em]"
+          />
         </div>
       </section>
 
