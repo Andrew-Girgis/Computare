@@ -51,8 +51,13 @@ export default function Home() {
           aria-hidden="true"
         >
           <ASCIIAnimation
-            className="text-ink/35 text-[10px] md:text-sm lg:text-base leading-[1.15] whitespace-pre -translate-x-1/8"
+            className="hidden md:block text-ink/35 md:text-sm lg:text-base leading-[1.15] whitespace-pre -translate-x-1/8"
             fps={12}
+          />
+          <ASCIIAnimation
+            className="block md:hidden text-ink/35 text-xs leading-[1.15] whitespace-pre -translate-x-1/8 -translate-y-7/8"
+            fps={12}
+            basePath="/ascii/soj_ascii_frames_mobile"
           />
         </div>
 

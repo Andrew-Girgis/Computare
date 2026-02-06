@@ -49,9 +49,11 @@ class AnimationManager {
 export function ASCIIAnimation({
   className = "",
   fps = 24,
+  basePath = "/ascii/soj_ascii_frames",
 }: {
   className?: string;
   fps?: number;
+  basePath?: string;
 }) {
   const [frames, setFrames] = useState<string[]>([]);
   const [current, setCurrent] = useState(0);
@@ -65,7 +67,7 @@ export function ASCIIAnimation({
     async function load() {
       const loaded = await Promise.all(
         FRAME_NAMES.map(async (name) => {
-          const res = await fetch(`/ascii/soj_ascii_frames/${name}`);
+          const res = await fetch(`${basePath}/${name}`);
           if (!res.ok) return "";
           return res.text();
         })
@@ -77,7 +79,7 @@ export function ASCIIAnimation({
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [basePath]);
 
   // Advance frame
   const advance = useCallback(() => {
