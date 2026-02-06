@@ -86,6 +86,15 @@ supabase/
 tests/
 └── integration/
     └── test_pdf_extraction.py
+
+web/                          # Next.js frontend (App Router)
+├── src/
+│   ├── app/                  # Route groups: (marketing), (dashboard), (docs), (auth)
+│   ├── components/           # React components (shadcn/ui + custom)
+│   ├── lib/supabase/         # Supabase browser/server clients
+│   └── content/docs/         # MDX documentation
+├── middleware.ts              # Auth session refresh
+└── package.json
 ```
 
 ## Categories
@@ -95,18 +104,18 @@ tests/
 | Category | Subcategories |
 |----------|---------------|
 | Food & Dining | Coffee & Cafes, Fast Food, Restaurants, Delivery, Convenience |
-| Transportation | Gas & Fuel, Ride Share, Public Transit, Parking |
-| Retail & Shopping | Clothing, Electronics, Home & Garden, Online Shopping, Department Stores, Pet, Sporting Goods, General Merchandise |
-| Bills & Utilities | Phone & Internet, Insurance, Subscriptions & Memberships, Government & Tax, Bank Fees |
-| Healthcare | Pharmacy, Medical, Dental, Vision, Veterinary |
-| Entertainment | Gaming, Streaming, Events & Attractions, Sports & Fitness, Alcohol |
-| Housing | Rent & Mortgage |
-| Income | |
-| Transfers | |
-| Investment | |
-| Education | |
-| Personal Care | |
-| AI & Software Services | |
+| Retail & Shopping | Groceries, Alcohol, Clothing, Electronics, Online/General, Dollar/Discount, Home, Pet |
+| Entertainment | Gaming, Movies, Streaming, Activities/Venues, Events |
+| Transportation | Gas & Fuel, Parking, Ride-hailing, Auto Maintenance |
+| Bills & Utilities | Bank Fees, Phone Bill, Utilities, Insurance, Loan Payments |
+| Healthcare | Pharmacy, Physio & Rehab, Medical, Optometry, Other |
+| Housing | Home Maintenance |
+| Income | &mdash; |
+| Transfers | &mdash; |
+| Investment | &mdash; |
+| Education | &mdash; |
+| Personal Care | &mdash; |
+| AI & Software Services | &mdash; |
 
 ## Database Schema
 
@@ -125,6 +134,8 @@ All tables have RLS enabled. Materialized views refresh via `SELECT refresh_all_
 ### Prerequisites
 
 - Python 3.11+
+- Node.js 22+ (see `.nvmrc`)
+- pnpm (`corepack enable` after installing Node.js)
 - [Supabase CLI](https://supabase.com/docs/guides/cli) (for local database)
 - Tesseract OCR (optional, for scanned document fallback)
 
@@ -181,6 +192,20 @@ python scripts/run_subscription_detection.py
 uvicorn computare.api.app:app --reload
 ```
 
+### Frontend
+
+```bash
+cd web
+cp .env.example .env.local
+# Edit .env.local with your Supabase anon key
+pnpm install
+pnpm dev
+```
+
+The frontend runs on `http://localhost:3000` and connects to:
+- Supabase at `http://127.0.0.1:54321` for auth, database, and realtime
+- FastAPI at `http://127.0.0.1:8000` for categorization and extraction
+
 ## API
 
 | Method | Endpoint | Description |
@@ -194,6 +219,9 @@ uvicorn computare.api.app:app --reload
 
 ## Tech Stack
 
+- **Frontend:** Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+- **Docs:** Fumadocs (MDX)
+- **Auth:** Supabase Auth (`@supabase/ssr`)
 - **Extraction:** pdfplumber, pdf2image, Pillow, pytesseract
 - **AI:** Anthropic Claude (vision), OpenAI GPT-4o-mini, LangChain
 - **API:** FastAPI, Uvicorn, Pydantic

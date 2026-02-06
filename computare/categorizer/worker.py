@@ -20,6 +20,7 @@ from .categories import (
 )
 from .cache import MerchantCache, MerchantMapping
 from .chains import build_batch_chain, get_categories_string
+from .normalizer import normalize_merchant, CANONICAL_MERCHANT_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -213,13 +214,23 @@ class CategorizationWorker:
     ) -> Optional[Tuple[str, TransactionCategory, Optional[str]]]:
         """Check raw_store against known merchant keywords.
 
-        Returns (merchant_name, category, sub_category) or None.
+        First normalizes the raw_store to strip POS prefixes, location codes, etc.,
+        then matches against KNOWN_MERCHANT_HINTS keywords.
+
+        Returns (normalized_merchant_name, category, sub_category) or None.
         """
-        store_lower = raw_store.lower()
+        # Normalize first for better matching
+        normalized = normalize_merchant(raw_store)
+        normalized_lower = normalized.lower()
+        raw_lower = raw_store.lower()
+
         for keyword, (category, sub_cat) in KNOWN_MERCHANT_HINTS.items():
-            if keyword in store_lower:
+            # Check both normalized and raw (normalized is more likely to match)
+            if keyword in normalized_lower or keyword in raw_lower:
                 sub_value = sub_cat.value if sub_cat else None
-                return keyword.replace("_", " ").title(), category, sub_value
+                # Use canonical name if available, otherwise the normalized result
+                display_name = CANONICAL_MERCHANT_NAMES.get(keyword, normalized)
+                return display_name, category, sub_value
         return None
 
     def _call_llm_batched(
@@ -272,7 +283,9 @@ class CategorizationWorker:
                     if not self._is_valid_category(category):
                         category = "Retail & Shopping"
 
-                    merchant = item.get("merchant", raw_store)
+                    # Normalize the merchant name from LLM (or use our normalizer as fallback)
+                    llm_merchant = item.get("merchant", "")
+                    merchant = normalize_merchant(raw_store) if not llm_merchant else llm_merchant
 
                     mapping = MerchantMapping(
                         raw_store=raw_store,

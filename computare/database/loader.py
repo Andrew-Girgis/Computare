@@ -91,6 +91,7 @@ class DatabaseLoader:
         self.client: Optional[Client] = None
         self._institution_ids: Dict[str, str] = {}
         self._account_ids: Dict[str, str] = {}
+        self._merchant_cache_entries: Dict[str, Dict] = {}  # raw_store -> cache entry
 
     def connect(self) -> bool:
         """Connect to Supabase."""
@@ -201,6 +202,10 @@ class DatabaseLoader:
                     })
 
                 for t in data['transactions']:
+                    # Use enriched merchant if available, otherwise fall back to raw store
+                    raw_store = t.get('store', '')
+                    merchant = t.get('merchant') or raw_store
+
                     rows.append({
                         'account_id': account_id,
                         'date': t['date'],
@@ -208,18 +213,30 @@ class DatabaseLoader:
                         'amount': float(t['amount']),
                         'balance': float(t['balance']) if t.get('balance') is not None else None,
                         'transaction_type': t.get('transaction_type', 'debit' if t['amount'] < 0 else 'credit'),
-                        'merchant': t.get('store'),
+                        'merchant': merchant,
                         'location': t.get('location'),
                         'category': t.get('category'),
+                        'sub_category': t.get('sub_category'),
                         'source_file': source_file,
                         'raw_text': t.get('raw_text'),
                         'raw_data': json.dumps({
-                            'store': t.get('store'),
+                            'store': raw_store,
+                            'merchant': merchant,
                             'location': t.get('location'),
                             'raw_text': t.get('raw_text'),
                             'description': t.get('description'),
                         }),
                     })
+
+                    # Collect merchant cache entries from enriched data
+                    if raw_store and merchant and t.get('category'):
+                        self._merchant_cache_entries[raw_store] = {
+                            'raw_store': raw_store,
+                            'normalized_merchant': merchant,
+                            'category': t['category'],
+                            'sub_category': t.get('sub_category'),
+                            'source': 'json',
+                        }
 
             except Exception as e:
                 print(f"  Error loading {json_file.name}: {e}")
@@ -248,20 +265,38 @@ class DatabaseLoader:
                 source_file = data.get('metadata', {}).get('source_file', json_file.name)
 
                 for t in data.get('transactions', []):
+                    # Use enriched merchant if available, otherwise use description
+                    raw_desc = t.get('description', '')
+                    merchant = t.get('merchant') or raw_desc
+
                     rows.append({
                         'account_id': account_id,
                         'date': t['date'],
-                        'description': t['description'],
+                        'description': raw_desc,
                         'amount': float(t['amount']),
                         'balance': None,
                         'transaction_type': t.get('type', 'debit' if t['amount'] < 0 else 'credit'),
+                        'merchant': merchant,
+                        'category': t.get('category'),
+                        'sub_category': t.get('sub_category'),
                         'source_file': source_file,
                         'raw_text': t.get('raw_text'),
                         'raw_data': json.dumps({
                             'raw_text': t.get('raw_text'),
-                            'description': t.get('description'),
+                            'description': raw_desc,
+                            'merchant': merchant,
                         }),
                     })
+
+                    # Collect merchant cache entries from enriched data
+                    if raw_desc and merchant and t.get('category'):
+                        self._merchant_cache_entries[raw_desc] = {
+                            'raw_store': raw_desc,
+                            'normalized_merchant': merchant,
+                            'category': t['category'],
+                            'sub_category': t.get('sub_category'),
+                            'source': 'json',
+                        }
 
             except Exception as e:
                 print(f"  Error loading {json_file.name}: {e}")
@@ -314,6 +349,9 @@ class DatabaseLoader:
                         if match:
                             symbol = match.group(1)
 
+                    # Use enriched fields if available
+                    merchant = t.get('merchant') or desc
+
                     row = {
                         'account_id': account_id,
                         'date': t['date'],
@@ -322,6 +360,9 @@ class DatabaseLoader:
                         'balance': None,
                         'transaction_type': t.get('type', 'debit' if t['amount'] < 0 else 'credit'),
                         'activity_type': activity,
+                        'merchant': merchant,
+                        'category': t.get('category'),
+                        'sub_category': t.get('sub_category'),
                         'source_file': source_file,
                         'raw_text': t.get('raw_text'),
                         'raw_data': json.dumps({
@@ -332,6 +373,16 @@ class DatabaseLoader:
                             'unit_price': unit_price,
                         }),
                     }
+
+                    # Collect merchant cache entries from enriched data
+                    if desc and merchant and t.get('category'):
+                        self._merchant_cache_entries[desc] = {
+                            'raw_store': desc,
+                            'normalized_merchant': merchant,
+                            'category': t['category'],
+                            'sub_category': t.get('sub_category'),
+                            'source': 'json',
+                        }
                     rows.append(row)
 
                     # Track trade details to insert after transactions
@@ -422,6 +473,9 @@ class DatabaseLoader:
                     if fx_match:
                         raw_data['fx_rate'] = float(fx_match.group(1))
 
+                    # Use enriched merchant if available
+                    merchant = t.get('merchant') or desc
+
                     row = {
                         'account_id': account_id,
                         'date': t['date'],
@@ -430,10 +484,23 @@ class DatabaseLoader:
                         'balance': float(t['balance']) if t.get('balance') is not None else None,
                         'transaction_type': trans_type,
                         'activity_type': activity,
+                        'merchant': merchant,
+                        'category': t.get('category'),
+                        'sub_category': t.get('sub_category'),
                         'source_file': f'wealthsimple/{ws_type}.json',
                         'raw_data': json.dumps(raw_data),
                     }
                     rows.append(row)
+
+                    # Collect merchant cache entries from enriched data
+                    if desc and merchant and t.get('category'):
+                        self._merchant_cache_entries[desc] = {
+                            'raw_store': desc,
+                            'normalized_merchant': merchant,
+                            'category': t['category'],
+                            'sub_category': t.get('sub_category'),
+                            'source': 'json',
+                        }
 
                     if t.get('symbol'):
                         trade_indices.append({
@@ -533,6 +600,27 @@ class DatabaseLoader:
 
         return len(rows)
 
+    def save_merchant_cache(self) -> int:
+        """Save collected merchant cache entries to database."""
+        if not self.client or not self._merchant_cache_entries:
+            return 0
+
+        print(f"\nSaving {len(self._merchant_cache_entries)} merchant cache entries...")
+        rows = list(self._merchant_cache_entries.values())
+
+        # Upsert to handle duplicates
+        try:
+            for i in range(0, len(rows), BATCH_SIZE):
+                chunk = rows[i:i + BATCH_SIZE]
+                self.client.table('merchant_cache').upsert(
+                    chunk, on_conflict='raw_store'
+                ).execute()
+            print(f"  Merchant cache populated.")
+            return len(rows)
+        except Exception as e:
+            print(f"  Error saving merchant cache: {e}")
+            return 0
+
     def refresh_summaries(self):
         """Refresh all materialized views after loading data."""
         if not self.client:
@@ -621,6 +709,11 @@ class DatabaseLoader:
         print(f"\n{'='*40}")
         print(f"Total: {total} transactions loaded")
         print(f"{'='*40}")
+
+        # Save merchant cache from enriched JSON data
+        cache_count = self.save_merchant_cache()
+        if cache_count:
+            results['merchant_cache'] = cache_count
 
         # Refresh materialized views
         self.refresh_summaries()

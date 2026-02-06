@@ -5,6 +5,7 @@
 .env.*
 .env.local
 !.env.example
+!web/.env.example
 
 # ============================================
 # Personal financial data
@@ -29,6 +30,17 @@ dist/
 build/
 
 # ============================================
+# Node.js / Next.js
+# ============================================
+node_modules/
+.next/
+out/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+
+# ============================================
 # IDE & OS
 # ============================================
 .DS_Store
@@ -47,3 +59,4 @@ supabase/.temp/
 # Personal Project Files
 # ============================================
 Computare - Project Overview.md
+inspo/
