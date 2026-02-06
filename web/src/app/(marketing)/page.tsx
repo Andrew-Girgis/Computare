@@ -1,14 +1,8 @@
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import { ShineHeadline } from "@/components/marketing/shine-headline";
+import { ASCIIAnimation } from "@/components/marketing/ascii-animation";
 import { Counter } from "@/components/marketing/counter";
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
-
-const ASCII_ART = fs.readFileSync(
-  path.join(process.cwd(), "public/ascii/soj-ascii-art.txt"),
-  "utf-8"
-);
 
 export const metadata = {
   title: "Computare — Open-Source Personal Finance",
@@ -50,17 +44,15 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section className="min-h-screen flex flex-col items-center justify-center px-5 md:px-10 lg:px-20 c-hero relative overflow-hidden">
-        {/* ASCII art watermark — centered behind hero */}
+        {/* ASCII art animation — centered behind hero */}
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden"
           aria-hidden="true"
         >
-          <pre
+          <ASCIIAnimation
             className="text-ink/35 text-[10px] md:text-sm lg:text-base leading-[1.15] whitespace-pre"
-            style={{ fontFamily: "monospace" }}
-          >
-            {ASCII_ART}
-          </pre>
+            fps={24}
+          />
         </div>
 
         <ShineHeadline className="font-serif italic text-7xl md:text-[96px] leading-[0.95] tracking-[-0.03em] text-center relative cursor-default">
