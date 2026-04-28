@@ -1,4 +1,21 @@
 /**
+ * Expense categories — the set used for spending calculations and filtering.
+ * Excludes Income, Transfers, and Investment which are not outflows.
+ */
+export const EXPENSE_CATEGORIES = new Set([
+  "Food & Dining",
+  "Transportation",
+  "Retail & Shopping",
+  "Bills & Utilities",
+  "Healthcare",
+  "Entertainment",
+  "Housing",
+  "Education",
+  "Personal Care",
+  "AI & Software Services",
+]);
+
+/**
  * Category colors — matches the `categories.color` column in the database
  * and the CATEGORY_COLORS dict in computare/categorizer/categories.py.
  */

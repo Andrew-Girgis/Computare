@@ -6,8 +6,12 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  // Skip auth check if Supabase isn't configured
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  // Skip auth check if Supabase isn't configured or bypass is enabled (local demo)
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_BYPASS_AUTH === "true"
+  ) {
     return supabaseResponse;
   }
 
