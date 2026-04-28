@@ -1,9 +1,11 @@
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import { Counter } from "@/components/marketing/counter";
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Computare — The Broadsheet",
+  robots: { index: false, follow: false },
 };
 
 export default function DesignFour() {

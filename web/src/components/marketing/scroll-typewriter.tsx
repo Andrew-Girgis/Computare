@@ -16,11 +16,15 @@ function TypewriterLine({
   onComplete?: () => void;
 }) {
   const [visible, setVisible] = useState(0);
+  const hasCompleted = useRef(false);
 
   useEffect(() => {
     if (!active) return;
     if (visible >= text.length) {
-      onComplete?.();
+      if (!hasCompleted.current) {
+        hasCompleted.current = true;
+        onComplete?.();
+      }
       return;
     }
 
@@ -32,9 +36,10 @@ function TypewriterLine({
   }, [active, visible, text.length, speed, onComplete]);
 
   return (
-    <div className={className}>
-      <span>{text.slice(0, visible)}</span>
-    </div>
+    <p className={className} aria-label={text}>
+      <span aria-hidden="true">{text.slice(0, visible)}</span>
+      <span className="sr-only">{text}</span>
+    </p>
   );
 }
 
@@ -54,7 +59,6 @@ export function ScrollTypewriterSequence({
   const ref = useRef<HTMLDivElement>(null);
   const [activeLine, setActiveLine] = useState(-1);
 
-  // Trigger on scroll into view
   useEffect(() => {
     const el = ref.current;
     if (!el) return;

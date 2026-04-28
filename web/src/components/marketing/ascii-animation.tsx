@@ -59,36 +59,56 @@ export function ASCIIAnimation({
   const [current, setCurrent] = useState(0);
   const framesRef = useRef<string[]>([]);
   const preRef = useRef<HTMLPreElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Load all frames
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     let cancelled = false;
 
     async function load() {
-      const loaded = await Promise.all(
-        FRAME_NAMES.map(async (name) => {
-          const res = await fetch(`${basePath}/${name}`);
-          if (!res.ok) return "";
-          return res.text();
-        })
-      );
-      if (cancelled) return;
-      framesRef.current = loaded;
-      setFrames(loaded);
+      const batchSize = 10;
+      const loaded: string[] = [];
+
+      for (let i = 0; i < FRAME_NAMES.length; i += batchSize) {
+        if (cancelled) return;
+        const batch = FRAME_NAMES.slice(i, i + batchSize);
+        const results = await Promise.all(
+          batch.map(async (name) => {
+            const res = await fetch(`${basePath}/${name}`);
+            if (!res.ok) return "";
+            return res.text();
+          })
+        );
+        loaded.push(...results);
+
+        if (i === 0 && !cancelled) {
+          framesRef.current = [...loaded];
+          setFrames([...loaded]);
+          setCurrent(0);
+        } else if (!cancelled) {
+          framesRef.current = [...loaded];
+          setFrames([...loaded]);
+        }
+      }
     }
 
     load();
-    return () => { cancelled = true; };
-  }, [basePath]);
+    return () => {
+      cancelled = true;
+    };
+  }, [basePath, mounted]);
 
-  // Advance frame
   const advance = useCallback(() => {
     setCurrent((c) =>
       framesRef.current.length === 0 ? c : (c + 1) % framesRef.current.length
     );
   }, []);
 
-  // Animation loop with focus/blur and reduced motion
   const [manager] = useState(() => new AnimationManager(advance, fps));
 
   useEffect(() => {
@@ -116,14 +136,13 @@ export function ASCIIAnimation({
     };
   }, [manager, frames.length]);
 
-  // Update pre text content directly to avoid React re-renders
   useEffect(() => {
     if (preRef.current && frames[current]) {
       preRef.current.textContent = frames[current];
     }
   }, [current, frames]);
 
-  if (frames.length === 0) return null;
+  if (!mounted || frames.length === 0) return null;
 
   return (
     <pre

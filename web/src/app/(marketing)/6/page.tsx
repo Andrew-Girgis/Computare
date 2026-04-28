@@ -3,14 +3,16 @@ import { Counter } from "@/components/marketing/counter";
 import Link from "next/link";
 import fs from "fs";
 import path from "path";
+import type { Metadata } from "next";
 
 const ASCII_ART = fs.readFileSync(
   path.join(process.cwd(), "public/ascii/soj-ascii-art.txt"),
   "utf-8"
 );
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Computare — The Ledger: Etched",
+  robots: { index: false, follow: false },
 };
 
 export default function DesignSix() {

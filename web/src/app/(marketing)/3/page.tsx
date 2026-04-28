@@ -1,8 +1,10 @@
 import { ScrollReveal } from "@/components/marketing/scroll-reveal";
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Computare — The Terminal",
+  robots: { index: false, follow: false },
 };
 
 const CATEGORIES_TREE = `categories/
