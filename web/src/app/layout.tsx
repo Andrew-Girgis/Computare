@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import {
   Geist,
@@ -107,6 +108,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
